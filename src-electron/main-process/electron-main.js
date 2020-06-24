@@ -1,17 +1,56 @@
-import { app, BrowserWindow, nativeTheme, ipcMain, Menu } from "electron";
-import fetcher from "./Fetcher";
-import locales from "./locales";
-import Store from "./Store";
-import Downloader from "./Downloader";
+import {
+  app,
+  BrowserWindow,
+  nativeTheme,
+  ipcMain,
+  globalShortcut,
+  Menu
+} from "electron";
+import Store from "./core/Store";
+import createCallbacks from "./modules/ipcCallbacks";
+import createMenus from "./modules/builders";
+import { autoUpdater } from "electron-updater";
+import * as path from "path";
 
+autoUpdater.autoDownload = true;
+
+const time = 1.08e7;
+
+app.setAsDefaultProtocolClient("ytdl");
+
+let mainWindow;
+let loading;
+let isExitting = false;
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  isExitting = true;
+  app.quit(0);
+} else {
+  app.on("second-instance", (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (loading) {
+      if (loading.isMinimized()) loading.restore();
+      loading.focus();
+    } else if (mainWindow) {
+      reOpenWindow();
+    }
+  });
+
+  // Create myWindow, load the rest of the app, etc...
+  //app.whenReady().then(displayautoUpdater);
+  //app.on("activate", displayautoUpdater);
+}
 const store = new Store({
   userDataPath: app.getPath("userData"),
   configName: "folder",
   defaults: {
-    downloads: app.getPath("downloads"),
+    downloads: app.getPath("music"),
     bitrate: 320
   }
 });
+const { downloadSong, findVideos, downloadPlaylist } = createCallbacks(store);
 
 try {
   if (
@@ -34,108 +73,39 @@ if (process.env.PROD) {
     .replace(/\\/g, "\\\\");
 }
 
-function allProgress(proms, progress_cb) {
-  let d = 0;
-  progress_cb(1);
-  for (const p of proms) {
-    p.then(() => {
-      d++;
-      console.log(d)
-      progress_cb((d * 100) / proms.length);
-    });
+ipcMain.on("find-videos", findVideos);
+
+ipcMain.on("download-song", downloadSong);
+
+ipcMain.on("download-playlist", downloadPlaylist);
+
+/*
+ipcMain.on("update-playlist", (event, data) => {
+  const {downloads} = store.parseDataFile();
+  const fileName = `${sanitize(data.video.title)}.mp3`;
+  const playlistPath = join(downloads, data.name);
+  const playlistDataPath = join(playlistPath, "playlist.json");
+  if (!fs.existsSync(playlistPath) || !fs.existsSync(playlistDataPath)) {
+    return
   }
-  return Promise.all(proms);
-}
-
-function buildTemplate() {
-  const locale = Intl.DateTimeFormat()
-    .resolvedOptions()
-    .locale.toString();
-  const strings = locale in locales ? locales[locale] : locales.default;
-  let template = [
-    {
-      label: strings.preferences,
-      submenu: [
-        {
-          label: strings.changeBitrate,
-          submenu: [
-            {
-              label: strings.full,
-              click: () => {
-                store.set("bitrate", 320);
-              }
-            },
-            {
-              label: strings.high,
-              click: () => {
-                store.set("bitrate", 192);
-              }
-            },
-            {
-              label: strings.cd,
-              click: () => {
-                store.set("bitrate", 160);
-              }
-            },
-            {
-              label: strings.radio,
-              click: () => {
-                store.set("bitrate", 130);
-              }
-            },
-            {
-              label: strings.minimal,
-              click: () => {
-                store.set("bitrate", 65);
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ];
-  return Menu.buildFromTemplate(template);
-}
-
-ipcMain.on("find-videos", async (event, query) => {
-  event.sender.send("progress", 1);
-  let results = await fetcher.find(query);
-  event.sender.send("progress", 25);
-  if (!results.length) {
-    results = await fetcher.find(query);
-    event.sender.send("progress", 50);
+  const playlistFilePath = join(playlistPath, fileName);
+  console.log(playlistFilePath)
+  if (!fs.existsSync(playlistFilePath)) {
+    return;
   }
-  event.sender.send("progress", 100);
-  event.sender.send("close-progress");
-  event.sender.send("videos", results);
+  fs.unlinkSync(playlistFilePath);
+  fs.writeFileSync(playlistDataPath, JSON.stringify(data.playlist))
 });
+*/
 
-ipcMain.on("download-song", async (event, video) => {
-  const downloader = new Downloader();
-  await downloader.download(
-    video,
-    event,
-    store.parseDataFile().downloads,
-    store.parseDataFile().bitrate
-  );
-});
-
-ipcMain.on("download-playlist", async (ev, playlist) => {
-  const {downloads, bitrate} = store.parseDataFile(); 
-  const promises = playlist.map(video => new Downloader().download(video, ev, downloads, bitrate, true));
-  await allProgress(promises, (progress) => ev.sender.send("progress", parseInt(progress)))
-  ev.sender.send("close-progress")
-})
-let mainWindow;
-
-function createWindow() {
+async function createWindow() {
   /**
    * Initial window options
    */
-  const template = buildTemplate();
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 600,
+    frame: false,
     useContentSize: true,
     webPreferences: {
       // Change from /quasar.conf.js > electron > nodeIntegration;
@@ -147,6 +117,8 @@ function createWindow() {
       // preload: path.resolve(__dirname, 'electron-preload.js')
     }
   });
+  const { mainMenu, systray } = createMenus(mainWindow);
+  const template = await mainMenu(store);
   Menu.setApplicationMenu(template);
 
   mainWindow.loadURL(process.env.APP_URL);
@@ -156,7 +128,68 @@ function createWindow() {
   });
 }
 
-app.on("ready", createWindow);
+function loadError(error) {
+  console.log(error);
+  if (loading) {
+    loading.webContents.send("update-not-found");
+  }
+  setTimeout(() => {
+    if (!mainWindow) {
+      createWindow();
+    }
+
+    if (loading) {
+      loading.close();
+    }
+  }, 2000);
+}
+
+autoUpdater.on("error", loadError);
+autoUpdater.on("update-downloaded", () => {
+  autoUpdater.quitAndInstall(true, true);
+});
+autoUpdater.on("update-available", () => {
+  if (mainWindow) {
+    mainWindow.close();
+    mainWindow = null;
+  }
+  loading.webContents.send("update-available");
+});
+
+autoUpdater.on("update-not-available", () => {
+  loading.webContents.send("no-updates");
+  setTimeout(() => {
+    if (!mainWindow) {
+      createWindow();
+    }
+    loading.close();
+  }, 2000);
+});
+
+autoUpdater.on("download-progress", ({ percent, transferred, total }) => {
+  loading.webContents.send("downloading-update", percent);
+});
+app.on("ready", () => {
+  loading = new BrowserWindow({
+    width: 400,
+    height: 500,
+    show: false,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  });
+
+  loading.once("show", () => {
+    autoUpdater.checkForUpdatesAndNotify();
+  });
+  // We are done, load electron
+  loading.on("close", () => {
+    loading = null;
+  });
+  loading.loadURL(path.join(__statics, "load-bar/index.html"));
+  loading.show();
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -169,3 +202,16 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+app.on("before-quit", () => {
+  globalShortcut.unregisterAll();
+});
+
+setInterval(async () => {
+  try {
+    const data = await autoUpdater.checkForUpdates();
+    console.log(data);
+  } catch (e) {
+    console.log(e);
+  }
+}, time);

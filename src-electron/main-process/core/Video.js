@@ -17,6 +17,10 @@ class Video {
   static fromVideo(video) {
     return new Video(video);
   }
+
+  static fromYtdlCore(video) {
+    
+  }
 }
 
 export default Video;

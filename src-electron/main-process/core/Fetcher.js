@@ -6,10 +6,10 @@ class Fetcher {
       const results = await youtube.search(param, {limit: 20});
       return results.map(Video.fromVideo)
     } catch (e) {
-      console.log(e);
       throw e;
     }
   }
+
 }
 
 export default new Fetcher();

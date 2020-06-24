@@ -6,5 +6,10 @@ module.exports = {
     high: "192 (High Quality)",
     cd: "160 (CD Quality)",
     radio: "130 (Radio Quality)",
-    minimal: "65 (Minimal Quality)"
+    minimal: "65 (Minimal Quality)",
+    loadPlaylist: "Load playlist",
+    selectFile: "Select the playlist file",
+    playlistError: "There's no playlist",
+    playlistErrorMessage: "This folder doesn't contain any playlist file."
+
 }

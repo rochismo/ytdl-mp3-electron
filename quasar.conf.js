@@ -169,21 +169,25 @@ module.exports = function (/* ctx */) {
         // appCategoryType: '',
         // osxSign: '',
         // protocol: 'myapp://path',
-
+        "asarUnpack": [ "**/ffmpeg-static/*" ]
         // Windows only
         // win32metadata: { ... }
       },
 
       builder: {
         // https://www.electron.build/configuration/configuration
-        nsis: {
-          deleteAppDataOnUninstall: true,
-          allowElevation: true
-        },
         appId: 'electron-youtube-downloader',
         win: {
           target: "nsis"
-        }
+        },
+        publish: {
+          provider: "github",
+          repo: "ytdl-mp3-electron",
+          owner: "rochismo",
+          protocol: "https",
+          releaseType: "release",
+          publishAutoUpdate: false
+        },
       },
 
       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
