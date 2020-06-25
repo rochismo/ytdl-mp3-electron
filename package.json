@@ -1,6 +1,6 @@
 {
   "name": "electron-youtube-downloader",
-  "version": "1.0.0",
+  "version": "9.0.6",
   "description": "A simple youtube to mp3 downloader",
   "productName": "YouTube Downloader",
   "cordovaId": "com.ytdownloader",
