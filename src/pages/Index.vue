@@ -8,7 +8,8 @@
             placeholder="Enter your playlist's name"
             dark
             style="font-size:2em"
-            class="q-px-lg q-mb-md"
+            input-class="text-center"
+            class="q-px-lg q-mb-md text-center"
             hint="Playlist Name"
             @input="saveName()"
           />
@@ -23,19 +24,25 @@
           </q-item-section>
 
           <q-separator />
-          <q-scroll-area :thumb-style="thumbStyle" :style="$q.screen.sm ? 'height: 50vh' : 'height: 67vh;'" v-if="playlist.length">
+          <q-scroll-area
+            :thumb-style="thumbStyle"
+            :style="$q.screen.sm ? 'height: 50vh' : 'height: 67vh;'"
+          >
             <div v-for="video in playlist" :key="video.id">
               <q-item tag="label" v-ripple @click="downloadSong(video)">
                 <q-item-section side top class="q-mt-md">
-                  <q-icon
-                    name="delete"
-                    color="red"
-                    style="cursor: pointer"
-                    size="50px"
-                    @click.stop="addToPlaylist(video)"
-                  />
-                </q-item-section>
+                  <div class="flex items-align q-mt-sm">
+                    <q-checkbox v-model="video.checked || defaultValue"></q-checkbox>
 
+                    <q-icon
+                      name="delete"
+                      color="red"
+                      style="cursor: pointer"
+                      size="50px"
+                      @click.stop="addToPlaylist(video)"
+                    />
+                  </div>
+                </q-item-section>
                 <q-item-section>
                   <q-item-label>{{ video.title }}</q-item-label>
                   <q-item-label caption>{{video.duration}}</q-item-label>
@@ -61,8 +68,15 @@
               label="Remove playlist"
               color="negative"
               icon="delete"
-              class="q-mb-lg q-mt-md"
+              class="q-mb-lg q-mt-md q-mr-md"
               @click="emptyPlaylist()"
+            />
+            <q-btn
+              label="Remove selected"
+              color="negative"
+              icon="delete"
+              class="q-mb-lg q-mt-md"
+              @click="playlist = playlist.filter(({checked}) => !checked)"
             />
           </div>
         </q-list>
@@ -73,6 +87,7 @@
           <q-input
             v-model="search"
             dark
+            input-class="text-center"
             placeholder="Search something on YouTube"
             style="width: 100%; font-size: 2em"
             :error="!!message"
@@ -134,6 +149,7 @@ export default {
         width: "5px",
         opacity: 0.75
       },
+      defaultValue: false,
       playlistDownloading: false,
       videosDownloaded: 0,
       message: "",
@@ -208,6 +224,7 @@ export default {
           .onOk(() => this.deleteVideo(video));
       }
       video.isAdded = true;
+      video.checked = false;
       this.playlist.push(video);
       localStorage.setItem("playlist", JSON.stringify(this.playlist));
     },

@@ -5,6 +5,8 @@ import { join, parse } from "path";
 const oslocale = require("os-locale");
 const sanitize = require("sanitize-filename");
 
+const { cleanMeta } = require("./helpers").default;
+
 function openDialog(locales, store, mainWindow) {
   const { downloads } = store.parseDataFile();
   const folder = dialog.showOpenDialogSync(mainWindow, {
@@ -102,7 +104,7 @@ export default function(mainWindow) {
                   type: "radio",
                   label: strings.minimal,
                   click() {
-                    store.set("bitrate", 65)
+                    store.set("bitrate", 65);
                   }
                 }
               ]
