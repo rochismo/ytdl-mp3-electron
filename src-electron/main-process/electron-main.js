@@ -222,12 +222,3 @@ app.on("before-quit", () => {
   globalShortcut.unregisterAll();
 });
 
-setInterval(async () => {
-  try {
-    const data = await autoUpdater.checkForUpdates();
-    console.log(data);
-  } catch (e) {
-    console.log("E Error here")
-    console.log(e);
-  }
-}, 5000);
