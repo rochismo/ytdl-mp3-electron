@@ -21,12 +21,31 @@
 <body>
   <!-- DO NOT touch the following DIV -->
   <div id="q-app"></div>
+  <style>
+    .titlebar .window-title {
+      font-size: large;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .titlebar>.window-appicon {
+      height: 60px;
+    }
+
+    .menubar-menu-button {
+      font-size: 1.2rem;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+  </style>
   <script>
     const customTitlebar = require('custom-electron-titlebar');
     const remote = require("electron").remote;
+    const path = require("path");
+    const url = require("url");
     addEventListener("load", () => {
       new customTitlebar.Titlebar({
-        backgroundColor: customTitlebar.Color.fromHex('#414141')
+        backgroundColor: customTitlebar.Color.fromHex('#414141'),
+        icon: url.format(path.join(__dirname, "../../app.asar.unpacked/statics/favicon.ico")),
+        drag: true
       });
     })
   </script>

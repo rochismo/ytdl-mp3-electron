@@ -171,7 +171,7 @@ module.exports = function(/* ctx */) {
 
       builder: {
         // https://www.electron.build/configuration/configuration
-        asarUnpack: ["**/*.exe"],
+        asarUnpack: ["**/*.exe", '**/*.ico'],
         appId: "electron-youtube-downloader",
         win: {
           target: "nsis"

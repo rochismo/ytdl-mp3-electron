@@ -139,9 +139,9 @@ export default {
       message: "",
       search: "",
       progress: 0,
-      videos: JSON.parse(localStorage.getItem("videos")) || [],
-      playlistName: localStorage.getItem("playlist-name") || "",
-      playlist: JSON.parse(localStorage.getItem("playlist")) || []
+      videos: [],
+      playlistName: "",
+      playlist: []
     };
   },
   created() {
