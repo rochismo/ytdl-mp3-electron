@@ -17,12 +17,13 @@ export default function(store) {
   console.log(store);
   return {
     downloadSong: async (event, video) => {
+      const {downloads, bitrate} = store.parseDataFile();
       const downloader = new Downloader();
       await downloader.download(
         video,
         event,
-        store.parseDataFile().downloads,
-        store.parseDataFile().bitrate
+        downloads,
+        bitrate
       );
     },
 

@@ -55,7 +55,7 @@ body {
     border: 5px solid white;
   }
   50% {
-    border: 25px solid #7289da;
+    border: 25px solid #ef6c00;
   }
   100% {
     border: 5px solid white;
@@ -67,7 +67,7 @@ body {
     border: 5px solid white;
   }
   50% {
-    border: 25px solid #7289da;
+    border: 25px solid #ef6c00;
   }
   100% {
     border: 5px solid white;
@@ -113,7 +113,7 @@ label div {
   position: absolute;
   top: 0;
   left: 0;
-  background: #7289da;
+  background: #ef6c00;
   height: 100%;
   width: 0%;
   z-index: 5;

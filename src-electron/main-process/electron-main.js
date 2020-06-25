@@ -9,13 +9,17 @@ import {
 import Store from "./core/Store";
 import createCallbacks from "./modules/ipcCallbacks";
 import createMenus from "./modules/builders";
-import { autoUpdater } from "electron-updater";
 import * as path from "path";
+import * as fs from 'fs-extra';
+import isDev from 'electron-is-dev'
 
-autoUpdater.autoDownload = true;
-
+const autoUpdater = require("electron-updater").autoUpdater;
+const log = require("electron-log")
 const time = 1.08e7;
-
+// Debugging
+log.transports.file.level = "debug";
+autoUpdater.logger = log;
+autoUpdater.autoDownload = true;
 app.setAsDefaultProtocolClient("ytdl");
 
 let mainWindow;
@@ -129,7 +133,7 @@ async function createWindow() {
 }
 
 function loadError(error) {
-  console.log(error);
+  log.error(error);
   if (loading) {
     loading.webContents.send("update-not-found");
   }
@@ -153,23 +157,34 @@ autoUpdater.on("update-available", () => {
     mainWindow.close();
     mainWindow = null;
   }
-  loading.webContents.send("update-available");
+  if (loading) {
+    loading.webContents.send("update-available");
+  }
 });
 
 autoUpdater.on("update-not-available", () => {
-  loading.webContents.send("no-updates");
+  if (loading) {
+    loading.webContents.send("no-updates");
+  }
   setTimeout(() => {
     if (!mainWindow) {
       createWindow();
     }
-    loading.close();
+    if (loading) {
+      loading.close();
+    }
   }, 2000);
 });
 
 autoUpdater.on("download-progress", ({ percent, transferred, total }) => {
-  loading.webContents.send("downloading-update", percent);
+  if (loading) {
+    loading.webContents.send("downloading-update", percent);
+  }
 });
 app.on("ready", () => {
+  if (isDev) {
+    return createWindow();
+  }
   loading = new BrowserWindow({
     width: 400,
     height: 500,
@@ -212,6 +227,7 @@ setInterval(async () => {
     const data = await autoUpdater.checkForUpdates();
     console.log(data);
   } catch (e) {
+    console.log("E Error here")
     console.log(e);
   }
-}, time);
+}, 5000);

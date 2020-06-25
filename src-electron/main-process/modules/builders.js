@@ -1,7 +1,7 @@
 import { Menu, app, dialog } from "electron";
 import * as fs from "fs-extra";
-import locales from './../locales';
-import {join, parse} from 'path';
+import locales from "./../locales";
+import { join, parse } from "path";
 const oslocale = require("os-locale");
 const sanitize = require("sanitize-filename");
 
@@ -71,33 +71,38 @@ export default function(mainWindow) {
               label: strings.changeBitrate,
               submenu: [
                 {
+                  type: "radio",
                   label: strings.full,
-                  click: () => {
+                  click() {
                     store.set("bitrate", 320);
                   }
                 },
                 {
+                  type: "radio",
                   label: strings.high,
-                  click: () => {
+                  click() {
                     store.set("bitrate", 192);
                   }
                 },
                 {
+                  type: "radio",
                   label: strings.cd,
                   click: () => {
                     store.set("bitrate", 160);
                   }
                 },
                 {
+                  type: "radio",
                   label: strings.radio,
                   click: () => {
                     store.set("bitrate", 130);
                   }
                 },
                 {
+                  type: "radio",
                   label: strings.minimal,
-                  click: () => {
-                    store.set("bitrate", 65);
+                  click() {
+                    store.set("bitrate", 65)
                   }
                 }
               ]

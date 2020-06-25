@@ -1,7 +1,7 @@
 import * as fs from "fs-extra";
 
 const ffmpeg = require("fluent-ffmpeg");
-const binaries = require("ffmpeg-static");
+const log = require("electron-log")
 const sanitize = require("sanitize-filename");
 const ytdl = require("ytdl-core");
 const mkdir = require("mkdirp");
@@ -41,16 +41,18 @@ export default class Downloader {
             "-metadata",
             "title=" + title
           ];
+          log.info(__statics.replace("app.asar", "app.asar.unpacked"))
+          console.log(bitrate)
           const ffmpegStream = ffmpeg({
             source: stream.pipe(progressStream)
           })
-            .setFfmpegPath(binaries.replace("app.asar", "app.asar.unpacked"))
+            .setFfmpegPath(path.join(__statics.replace("app.asar", "app.asar.unpacked"), "ffmpeg.exe"))
             .audioBitrate(bitrate)
             .withAudioCodec("libmp3lame")
             .toFormat("mp3")
             .outputOptions(...outputOptions)
             .on("error", e => {
-              console.log(e);
+              log.error(e);
               if (!playlistName) {
                 event.sender.send("error", `Error with song ${title}`);
               }
@@ -65,7 +67,7 @@ export default class Downloader {
             .saveToFile(fileName);
         });
       } catch (e) {
-        console.log(e);
+        log.error(e);
         resolve();
         return event.sender.send("error", "Video is not available");
       }
