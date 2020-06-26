@@ -32,7 +32,7 @@
               <q-item tag="label" v-ripple @click="downloadSong(video)">
                 <q-item-section side top class="q-mt-md">
                   <div class="flex items-align q-mt-sm">
-                    <q-checkbox v-model="video.checked || defaultValue"></q-checkbox>
+                    <q-checkbox v-model="video.checked"></q-checkbox>
 
                     <q-icon
                       name="delete"
@@ -76,7 +76,7 @@
               color="negative"
               icon="delete"
               class="q-mb-lg q-mt-md"
-              @click="playlist = playlist.filter(({checked}) => !checked)"
+              @click="sendRemoveSelected(playlist.filter(({checked}) => checked).length)"
             />
           </div>
         </q-list>
@@ -122,9 +122,9 @@
                 ></q-btn>
                 <q-btn
                   class="q-mb-md"
-                  :label="video.isAdded === undefined || !video.isAdded ? 'Add to Playlist' : 'Remove from playlist'"
+                  :label="!isInPlaylist(video) ? 'Add to Playlist' : 'Remove from playlist'"
                   color="orange-9"
-                  icon="playlist_add"
+                  :icon="!isInPlaylist(video) ? 'playlist_add' : 'delete'"
                   @click="addToPlaylist(video)"
                 ></q-btn>
               </q-card-actions>
@@ -155,9 +155,9 @@ export default {
       message: "",
       search: "",
       progress: 0,
-      videos: [],
-      playlistName: "",
-      playlist: []
+      videos: JSON.parse(localStorage.getItem("videos")) || [],
+      playlistName: localStorage.getItem("playlist-name") || "",
+      playlist: JSON.parse(localStorage.getItem("playlist")) || []
     };
   },
   created() {
@@ -213,7 +213,7 @@ export default {
       ipcRenderer.send("find-videos", this.search);
     },
     async addToPlaylist(video) {
-      const found = this.playlist.find(wideo => wideo.id === video.id);
+      const found = this.isInPlaylist(video);
       if (found) {
         return this.$q
           .dialog({
@@ -229,8 +229,17 @@ export default {
       localStorage.setItem("playlist", JSON.stringify(this.playlist));
     },
     emptyPlaylist() {
-      this.playlist = [];
-      localStorage.setItem("playlist", JSON.stringify(this.playlist));
+      if (!this.playlist.length) return;
+      this.$q
+        .dialog({
+          title: "Confirm deletion",
+          message: "Are you sure you want to remove the entire playlist?",
+          cancel: true
+        })
+        .onOk(() => {
+          this.playlist = [];
+          localStorage.setItem("playlist", JSON.stringify(this.playlist));
+        });
     },
     downloadPlaylist(remove = false) {
       if (this.startAjax) return;
@@ -245,6 +254,12 @@ export default {
         name,
         remove
       });
+    },
+    isInPlaylist(video) {
+      const found = this.playlist
+        .map(({ id }) => id)
+        .find(id => id === video.id);
+      return found;
     },
     deleteVideo(video) {
       const index = this.playlist.findIndex(wideo => wideo.id === video.id);
@@ -261,6 +276,23 @@ export default {
     },
     saveName() {
       localStorage.setItem("playlist-name", this.playlistName);
+    },
+    sendRemoveSelected(amount) {
+      if (amount === 0) return;
+      const message =
+        amount === this.playlist.length
+          ? "Remove the entire playlist?"
+          : `Remove ${amount} video${amount > 1 ? "s" : ""} from the playlist?`;
+      this.$q
+        .dialog({
+          title: "Confirm deletion",
+          message,
+          cancel: true
+        })
+        .onOk(() => {
+          this.playlist = this.playlist.filter(({ checked }) => !checked);
+          localStorage.setItem("playlist", JSON.stringify(this.playlist));
+        });
     }
   }
 };

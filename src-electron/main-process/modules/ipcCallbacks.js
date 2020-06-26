@@ -38,10 +38,9 @@ export default function(store) {
       event.sender.send("progress", { progress: 1 });
       let results = await fetcher.find(query);
       event.sender.send("progress", { progress: 25 });
-
-      if (!results.length) {
+      event.sender.send("progress", { progress: 50 });
+      while (!results.length) {
         results = await fetcher.find(query);
-        event.sender.send("progress", { progress: 50 });
       }
       event.sender.send("progress", { progress: 100 });
       event.sender.send("close-progress");
