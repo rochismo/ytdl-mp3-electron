@@ -38,3 +38,4 @@ src/statics/*.exe
 
 android
 .env
+workspace.code-workspace
