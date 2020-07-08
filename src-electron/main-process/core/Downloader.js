@@ -1,7 +1,7 @@
 import * as fs from "fs-extra";
 
 const ffmpeg = require("fluent-ffmpeg");
-const log = require("electron-log")
+const log = require("electron-log");
 const sanitize = require("sanitize-filename");
 const ytdl = require("ytdl-core");
 const mkdir = require("mkdirp");
@@ -18,7 +18,7 @@ export default class Downloader {
           playlistName = sanitize(playlistName);
           downloadsPath = path.join(downloadsPath, playlistName);
           if (!fs.existsSync(downloadsPath)) {
-            fs.ensureDirSync(downloadsPath)
+            fs.ensureDirSync(downloadsPath);
           }
         }
         const fileName = path.join(downloadsPath, `${title}.mp3`);
@@ -32,7 +32,9 @@ export default class Downloader {
           });
           progressStream.on("progress", progress => {
             if (!playlistName) {
-              event.sender.send("progress", {progress: parseInt(progress.percentage)});
+              event.sender.send("progress", {
+                progress: parseInt(progress.percentage)
+              });
             }
           });
           const outputOptions = [
@@ -41,12 +43,16 @@ export default class Downloader {
             "-metadata",
             "title=" + title
           ];
-          log.info(__statics.replace("app.asar", "app.asar.unpacked"))
-          console.log(bitrate)
+          log.info(__statics.replace("app.asar", "app.asar.unpacked"));
           const ffmpegStream = ffmpeg({
             source: stream.pipe(progressStream)
           })
-            .setFfmpegPath(path.join(__statics.replace("app.asar", "app.asar.unpacked"), "ffmpeg.exe"))
+            .setFfmpegPath(
+              path.join(
+                __statics.replace("app.asar", "app.asar.unpacked"),
+                "ffmpeg.exe"
+              )
+            )
             .audioBitrate(bitrate)
             .withAudioCodec("libmp3lame")
             .toFormat("mp3")

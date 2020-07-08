@@ -10,7 +10,6 @@
             style="font-size:2em"
             input-class="text-center"
             class="q-px-lg q-mb-md text-center"
-            hint="Playlist Name"
             @input="saveName()"
           />
           <q-item-section v-if="playlist.length">
@@ -238,7 +237,9 @@ export default {
         })
         .onOk(() => {
           this.playlist = [];
+          this.playlistName = "";
           localStorage.setItem("playlist", JSON.stringify(this.playlist));
+          localStorage.setItem("playlist-name", "");
         });
     },
     downloadPlaylist(remove = false) {
@@ -292,6 +293,10 @@ export default {
         .onOk(() => {
           this.playlist = this.playlist.filter(({ checked }) => !checked);
           localStorage.setItem("playlist", JSON.stringify(this.playlist));
+          if (message === "Remove the entire playlist?") {
+            this.playlistName = "";
+            localStorage.setItem("playlist-name", "")
+          }
         });
     }
   }

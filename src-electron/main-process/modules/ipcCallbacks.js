@@ -14,7 +14,6 @@ import Downloader from "./../core/Downloader";
 const { allProgress, updateDuplicates } = require("./helpers").default;
 const { cleanMeta } = require("./helpers").default;
 export default function(store) {
-  console.log(store);
   return {
     downloadSong: async (event, video) => {
       const {downloads, bitrate} = store.parseDataFile();
