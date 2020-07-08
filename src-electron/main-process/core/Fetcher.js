@@ -12,22 +12,11 @@ class Fetcher {
         createdVideo.duration = moment("2015-01-01").startOf('day')
         .seconds(createdVideo.duration)
         .format('H:mm:ss');
-        createdVideo.duration = this.parseDate(createdVideo.duration);
         return createdVideo;
       });
     } catch (e) {
       throw e;
     }
-  }
-  parseDate(date) {
-    let format = date.split(":").reduce((formattedDate, nextValue) => {
-      if (!parseInt(nextValue, 10)) {
-        return formattedDate;
-      }
-      formattedDate += `${nextValue}:`
-      return formattedDate;
-    }, "");
-    return format.substring(0, format.length - 1);
   }
 }
 
